@@ -16,6 +16,10 @@
 #define PADDING                  10
 
 static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
+@interface MWPhotoBrowser(){
+    BOOL _hasInitFirstView;
+}
+@end
 
 @implementation MWPhotoBrowser
 
@@ -81,6 +85,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     _thumbPhotos = [[NSMutableArray alloc] init];
     _currentGridContentOffset = CGPointMake(0, CGFLOAT_MAX);
     _didSavePreviousStateOfNavBar = NO;
+    _hasInitFirstView = NO;
     self.automaticallyAdjustsScrollViewInsets = NO;
     
     // Listen for MWPhoto notifications
@@ -485,7 +490,16 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 
 - (void)viewWillLayoutSubviews {
     [super viewWillLayoutSubviews];
-    [self layoutVisiblePages];
+//    if (@available(iOS 11.0, *)) {//防止在iOS11下滑动时图片左右抖动的状态
+////        BOOL isNeedLayout = YES;
+////        for (MWZoomingScrollView *page in _visiblePages)
+////            if (page.index == _currentPageIndex + 1) isNeedLayout = NO;
+////        if (isNeedLayout) {
+////            [self layoutVisiblePages];
+////        }
+//    }else{
+        [self layoutVisiblePages];
+   // }
 }
 
 - (void)layoutVisiblePages {
@@ -538,7 +552,19 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     [self positionVideoLoadingIndicator];
 	
 	// Adjust contentOffset to preserve page location based on values collected prior to location
-	_pagingScrollView.contentOffset = [self contentOffsetForPageAtIndex:indexPriorToLayout];
+     if (@available(iOS 11.0, *)) {
+        if (!_hasInitFirstView) {
+            _hasInitFirstView = YES;
+            _pagingScrollView.contentOffset = [self contentOffsetForPageAtIndex:indexPriorToLayout];
+        }else{
+            if (indexPriorToLayout != _currentPageIndex) {
+                _pagingScrollView.contentOffset = [self contentOffsetForPageAtIndex:indexPriorToLayout];
+            }
+        }
+     }else{
+         _pagingScrollView.contentOffset = [self contentOffsetForPageAtIndex:indexPriorToLayout];
+     }
+    
 	[self didStartViewingPageAtIndex:_currentPageIndex]; // initial
     
 	// Reset
@@ -791,6 +817,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
             [page.selectedButton removeFromSuperview];
             [page.playButton removeFromSuperview];
             [page prepareForReuse];
+           
 			[page removeFromSuperview];
 			MWLog(@"Removed page at index %lu", (unsigned long)pageIndex);
 		}
@@ -856,7 +883,6 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
             
 		}
 	}
-	
 }
 
 - (void)updateVisiblePageStates {
