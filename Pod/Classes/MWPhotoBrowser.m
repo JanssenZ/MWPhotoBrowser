@@ -490,16 +490,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 
 - (void)viewWillLayoutSubviews {
     [super viewWillLayoutSubviews];
-//    if (@available(iOS 11.0, *)) {//防止在iOS11下滑动时图片左右抖动的状态
-////        BOOL isNeedLayout = YES;
-////        for (MWZoomingScrollView *page in _visiblePages)
-////            if (page.index == _currentPageIndex + 1) isNeedLayout = NO;
-////        if (isNeedLayout) {
-////            [self layoutVisiblePages];
-////        }
-//    }else{
-        [self layoutVisiblePages];
-   // }
+    [self layoutVisiblePages];
 }
 
 - (void)layoutVisiblePages {
